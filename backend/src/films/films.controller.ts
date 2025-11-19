@@ -17,6 +17,6 @@ export class FilmsController {
     if (!film) {
       throw new NotFoundException('Фильм не найден');
     }
-    return { items: film.schedule, total: film.schedule.length };
+    return film;
   }
 }
