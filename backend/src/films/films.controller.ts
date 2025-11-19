@@ -1,7 +1,7 @@
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { FilmsService } from './films.service';
 
-@Controller('api/afisha/films')
+@Controller('films')
 export class FilmsController {
   constructor(private readonly filmsService: FilmsService) {}
 
