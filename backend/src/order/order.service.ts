@@ -24,6 +24,14 @@ export class OrderService {
     for (const ticket of tickets) {
       const seatKey = `${ticket.row}:${ticket.seat}`;
       
+      if (ticket.row < 1 || ticket.row > session.rows) {
+        throw new BadRequestException(`Некорректный номер ряда: ${ticket.row}`);
+      }
+      
+      if (ticket.seat < 1 || ticket.seat > session.seats) {
+        throw new BadRequestException(`Некорректный номер места: ${ticket.seat}`);
+      }
+      
       if (newTaken.includes(seatKey)) {
         throw new ConflictException(`Место ${ticket.row}:${ticket.seat} уже занято`);
       }
