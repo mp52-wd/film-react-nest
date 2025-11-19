@@ -1,7 +1,20 @@
-import { IsString, IsArray, ValidateNested, IsNumber, Min } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  Min,
+  IsEmail,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class TicketDto {
+  @IsString()
+  film: string;
+
+  @IsString()
+  session: string;
+
   @IsNumber()
   @Min(1)
   row: number;
@@ -12,11 +25,11 @@ export class TicketDto {
 }
 
 export class CreateOrderDto {
-  @IsString()
-  filmId: string;
+  @IsEmail()
+  email: string;
 
   @IsString()
-  sessionId: string;
+  phone: string;
 
   @IsArray()
   @ValidateNested({ each: true })

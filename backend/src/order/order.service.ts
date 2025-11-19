@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { FilmsRepository } from '../repository/films.repository';
 import { CreateOrderDto } from './dto/order.dto';
 
@@ -7,44 +11,50 @@ export class OrderService {
   constructor(private readonly filmsRepository: FilmsRepository) {}
 
   async createOrder(orderDto: CreateOrderDto) {
-    const { filmId, sessionId, tickets } = orderDto;
+    const { tickets } = orderDto;
 
-    const film = await this.filmsRepository.findById(filmId);
-    if (!film) {
-      throw new BadRequestException('Фильм не найден');
-    }
-
-    const session = film.schedule.find(s => s.id === sessionId);
-    if (!session) {
-      throw new BadRequestException('Сеанс не найден');
-    }
-
-    const newTaken = [...session.taken];
+    const results = [];
 
     for (const ticket of tickets) {
-      const seatKey = `${ticket.row}:${ticket.seat}`;
-      
-      if (ticket.row < 1 || ticket.row > session.rows) {
-        throw new BadRequestException(`Некорректный номер ряда: ${ticket.row}`);
+      const { film: filmId, session: sessionId, row, seat } = ticket;
+
+      const film = await this.filmsRepository.findById(filmId);
+      if (!film) {
+        throw new BadRequestException('Фильм не найден');
       }
-      
-      if (ticket.seat < 1 || ticket.seat > session.seats) {
-        throw new BadRequestException(`Некорректный номер места: ${ticket.seat}`);
+
+      const session = film.schedule.find((s) => s.id === sessionId);
+      if (!session) {
+        throw new BadRequestException('Сеанс не найден');
       }
-      
-      if (newTaken.includes(seatKey)) {
-        throw new ConflictException(`Место ${ticket.row}:${ticket.seat} уже занято`);
+
+      if (row < 1 || row > session.rows) {
+        throw new BadRequestException(`Некорректный номер ряда: ${row}`);
       }
-      
-      newTaken.push(seatKey);
+
+      if (seat < 1 || seat > session.seats) {
+        throw new BadRequestException(`Некорректный номер места: ${seat}`);
+      }
+
+      const seatKey = `${row}:${seat}`;
+      if (session.taken.includes(seatKey)) {
+        throw new ConflictException(`Место ${row}:${seat} уже занято`);
+      }
+
+      const newTaken = [...session.taken, seatKey];
+      await this.filmsRepository.updateSession(filmId, sessionId, newTaken);
+
+      results.push({
+        id: `${filmId}-${sessionId}-${row}-${seat}`,
+        film: filmId,
+        session: sessionId,
+        daytime: session.daytime,
+        row,
+        seat,
+        price: session.price,
+      });
     }
 
-    await this.filmsRepository.updateSession(filmId, sessionId, newTaken);
-
-    return {
-      filmId,
-      sessionId,
-      tickets,
-    };
+    return { items: results };
   }
 }

@@ -11,4 +11,12 @@ export default defineConfig({
       }
     }
   },
+  server: {
+    proxy: {
+      '/content': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 })
